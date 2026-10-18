@@ -3,312 +3,441 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🌍 Захват Европы</title>
+<title>🌍 Мировое Господство: Экономика</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: #0f172a;
-    color: #e2e8f0;
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0a0e17;
+    --panel: rgba(18, 26, 43, 0.95);
+    --border: #2a3b5c;
+    --gold: #fbbf24;
+    --army: #ef4444;
+    --science: #38bdf8;
+    --my-color: #22c55e;
+    --enemy-color: #ef4444;
+    --neutral: #64748b;
   }
-  #map-container {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #1e293b;
-    padding: 20px;
+
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto Condensed', sans-serif; }
+  body { background: var(--bg); color: #e2e8f0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Верхняя панель ресурсов */
+  .top-bar {
+    background: var(--panel); border-bottom: 2px solid var(--border);
+    padding: 10px 20px; display: flex; justify-content: center; gap: 30px; z-index: 10;
   }
-  #map-container svg {
-    max-width: 100%;
-    max-height: 100%;
-  }
+  .resource { display: flex; align-items: center; gap: 8px; font-size: 1.2em; font-weight: bold; }
+  .resource span { color: var(--gold); text-shadow: 0 0 10px rgba(251,191,36,0.5); }
+
+  /* Основной макет */
+  .main-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+  /* Карта */
+  #map-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; }
+  #map-container svg { max-width: 100%; max-height: 100%; filter: drop-shadow(0 0 20px rgba(0,0,0,0.8)); }
+  
   #map-container path {
-    fill: #64748b;
-    stroke: #0f172a;
-    stroke-width: 1;
-    cursor: pointer;
-    transition: fill 0.2s;
+    fill: var(--neutral); stroke: #000; stroke-width: 1.5; cursor: pointer;
+    transition: fill 0.3s, filter 0.3s;
   }
-  #map-container path:hover {
-    fill: #94a3b8;
+  #map-container path:hover { filter: brightness(1.3); }
+  #map-container path.mine { fill: var(--my-color); }
+  #map-container path.enemy { fill: var(--enemy-color); }
+  
+  @keyframes flash-capture {
+    0% { fill: var(--enemy-color); }
+    50% { fill: #fff; filter: brightness(2); }
+    100% { fill: var(--my-color); }
   }
-  #map-container path.mine {
-    fill: #22c55e;
+  .captured-anim { animation: flash-capture 1s ease-out; }
+
+  /* Боковая панель */
+  .side-panel {
+    width: 380px; background: var(--panel); border-left: 2px solid var(--border);
+    display: flex; flex-direction: column;
   }
-  #map-container path.mine:hover {
-    fill: #4ade80;
-  }
-  #map-container path.enemy {
-    fill: #ef4444;
-  }
-  #map-container path.enemy:hover {
-    fill: #f87171;
-  }
-  #panel {
-    width: 320px;
-    background: #1e293b;
-    border-left: 1px solid #334155;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    overflow-y: auto;
-  }
-  h2 { color: #fbbf24; font-size: 1.2em; }
-  .stat { background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 8px; }
-  .stat span { color: #fbbf24; font-weight: bold; }
-  .country-info { background: #0f172a; padding: 12px; border-radius: 8px; }
-  .country-info h3 { color: #38bdf8; margin-bottom: 6px; }
+  .panel-content { padding: 20px; flex: 1; overflow-y: auto; }
+  
+  h2 { color: var(--gold); font-size: 1.3em; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 5px; text-transform: uppercase; }
+  
+  .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 1.05em; }
+  .stat-row span { font-weight: bold; color: #fff; }
+
+  /* Кнопки */
   button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 8px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.95em;
-    font-weight: bold;
-    transition: transform 0.1s;
+    width: 100%; padding: 10px; margin-bottom: 8px; border: none; border-radius: 4px;
+    font-size: 0.95em; font-weight: bold; cursor: pointer; text-transform: uppercase;
+    transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
   }
-  button:hover { transform: scale(1.02); }
-  button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-  .btn-attack { background: #ef4444; color: white; }
-  .btn-diplo { background: #22c55e; color: white; }
-  .btn-end { background: #fbbf24; color: #000; margin-top: auto; }
-  #log {
-    height: 120px;
-    overflow-y: auto;
-    background: #0f172a;
-    border-radius: 8px;
-    padding: 8px;
-    font-size: 0.8em;
-    font-family: monospace;
+  button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+  
+  .btn-attack { background: linear-gradient(135deg, #ef4444, #991b1b); color: #fff; }
+  .btn-diplo { background: linear-gradient(135deg, #fbbf24, #b45309); color: #000; }
+  .btn-spy { background: linear-gradient(135deg, #38bdf8, #1d4ed8); color: #fff; }
+  
+  /* Строительство */
+  .build-section { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; margin-top: 15px; border: 1px solid var(--border); }
+  .build-title { font-size: 0.9em; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; text-align: center; }
+  .btn-build { background: #334155; color: #fff; font-size: 0.85em; padding: 8px; }
+  .btn-build:hover:not(:disabled) { background: #475569; }
+
+  /* Лог событий */
+  #log { height: 150px; overflow-y: auto; background: rgba(0,0,0,0.5); border: 1px solid var(--border); border-radius: 4px; padding: 10px; font-size: 0.85em; font-family: monospace; margin-top: 15px; }
+  #log div { margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 3px;}
+  .log-good { color: #4ade80; }
+  .log-bad { color: #f87171; }
+  .log-info { color: #fbbf24; }
+
+  .btn-end { background: linear-gradient(135deg, #22c55e, #14532d); color: #fff; margin: 15px; width: calc(100% - 30px); }
+
+  .floating-text { position: absolute; font-weight: bold; font-size: 1.5em; pointer-events: none; animation: floatUp 1.5s ease-out forwards; text-shadow: 0 2px 4px #000; z-index: 100; }
+  @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
+
+  @media (max-width: 800px) {
+    .main-layout { flex-direction: column; }
+    .side-panel { width: 100%; height: 50%; border-left: none; border-top: 2px solid var(--border); }
   }
-  #log div { padding: 2px 0; border-bottom: 1px solid #1e293b; }
-  .good { color: #4ade80; }
-  .bad { color: #f87171; }
-  .info { color: #fbbf24; }
 </style>
 </head>
 <body>
 
-<div id="map-container">Загрузка карты...</div>
+<div class="top-bar">
+  <div class="resource">💰 <span id="ui-gold">500</span></div>
+  <div class="resource">🧍 <span id="ui-army">100</span></div>
+  <div class="resource">🔬 <span id="ui-tech">0</span></div>
+  <div class="resource">🏳️ <span id="ui-count">1</span></div>
+</div>
 
-<div id="panel">
-  <h2>🌍 Твоя Империя</h2>
-  <div class="stat">💰 Казна: <span id="money">500</span></div>
-  <div class="stat">⚔️ Армия: <span id="army">100</span></div>
-  <div class="stat">🏳️ Захвачено: <span id="count">0</span></div>
+<div class="main-layout">
+  <div id="map-container">Загрузка карты...</div>
 
-  <div class="country-info" id="info">
-    <p style="opacity:0.6;">Кликни на страну на карте</p>
+  <div class="side-panel">
+    <div class="panel-content">
+      <h2 id="info-title">Выбери страну</h2>
+      <div id="country-info">
+        <p style="opacity: 0.6;">Кликни на карту.</p>
+      </div>
+    </div>
+    <button class="btn-end" onclick="endTurn()">⏭️ Завершить ход</button>
   </div>
+</div>
 
-  <button class="btn-end" id="endTurn">⏭️ Следующий ход</button>
-
-  <h3 style="color:#94a3b8; font-size:0.9em;">📜 Лог</h3>
+<!-- Лог вынесен вниз для удобства -->
+<div style="position: absolute; bottom: 10px; left: 10px; width: 300px; z-index: 50;">
   <div id="log"></div>
 </div>
 
 <script>
-// ============ ДАННЫЕ ============
-const player = { money: 500, army: 100 };
+// ============ БАЗА ДАННЫХ ============
+const player = { gold: 500, army: 100, tech: 0 };
 let turn = 1;
-let selectedCode = null;
+let selected = null;
 
-// Данные о странах (можно расширять)
-const countryData = {
-  DE: { name: "Германия", army: 150, money: 200 },
-  FR: { name: "Франция", army: 140, money: 180 },
-  IT: { name: "Италия", army: 120, money: 160 },
-  ES: { name: "Испания", army: 100, money: 140 },
-  PL: { name: "Польша", army: 90, money: 100 },
-  UA: { name: "Украина", army: 110, money: 90 },
-  GB: { name: "Великобритания", army: 130, money: 190 },
-  SE: { name: "Швеция", army: 80, money: 120 },
-  NO: { name: "Норвегия", army: 70, money: 130 },
-  FI: { name: "Финляндия", army: 65, money: 90 },
-  AT: { name: "Австрия", army: 60, money: 80 },
-  CH: { name: "Швейцария", army: 50, money: 150, mountain: true },
-  NL: { name: "Нидерланды", army: 55, money: 110 },
-  BE: { name: "Бельгия", army: 50, money: 100 },
-  PT: { name: "Португалия", army: 60, money: 70 },
-  GR: { name: "Греция", army: 70, money: 60 },
-  CZ: { name: "Чехия", army: 55, money: 80 },
-  HU: { name: "Венгрия", army: 50, money: 70 },
-  RO: { name: "Румыния", army: 65, money: 60 },
-  BG: { name: "Болгария", army: 45, money: 50 },
-  RS: { name: "Сербия", army: 50, money: 50 },
-  HR: { name: "Хорватия", army: 40, money: 60 },
-  DK: { name: "Дания", army: 45, money: 90 },
-  IE: { name: "Ирландия", army: 35, money: 80 },
-  SK: { name: "Словакия", army: 35, money: 50 },
-  LT: { name: "Литва", army: 30, money: 40 },
-  LV: { name: "Латвия", army: 25, money: 35 },
-  EE: { name: "Эстония", army: 25, money: 35 },
-  SI: { name: "Словения", army: 30, money: 45 },
-  BY: { name: "Беларусь", army: 80, money: 50 },
-  MD: { name: "Молдова", army: 25, money: 25 },
-  AL: { name: "Албания", army: 30, money: 25 },
-  MK: { name: "Македония", army: 25, money: 25 },
-  BA: { name: "Босния", army: 30, money: 30 },
-  ME: { name: "Черногория", army: 20, money: 20 },
+// b: { wh: склад, fac: завод, ref: нпз }
+const db = {
+  DE: { name: "Германия", army: 120, gold: 200, rel: 0, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  FR: { name: "Франция", army: 110, gold: 180, rel: 10, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  IT: { name: "Италия", army: 90, gold: 160, rel: 20, terrain: 1.2, b: {wh:0, fac:0, ref:0} },
+  ES: { name: "Испания", army: 85, gold: 140, rel: 15, terrain: 1.2, b: {wh:0, fac:0, ref:0} },
+  PL: { name: "Польша", army: 80, gold: 120, rel: -20, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  UA: { name: "Украина", army: 100, gold: 100, rel: -10, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  GB: { name: "Великобритания", army: 130, gold: 250, rel: 30, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  SE: { name: "Швеция", army: 70, gold: 150, rel: 10, terrain: 1.3, b: {wh:0, fac:0, ref:0} },
+  NO: { name: "Норвегия", army: 60, gold: 130, rel: 20, terrain: 1.4, b: {wh:0, fac:0, ref:0} },
+  FI: { name: "Финляндия", army: 65, gold: 90, rel: 5, terrain: 1.3, b: {wh:0, fac:0, ref:0} },
+  CH: { name: "Швейцария", army: 50, gold: 300, rel: 50, terrain: 1.8, b: {wh:0, fac:0, ref:0} },
+  AT: { name: "Австрия", army: 55, gold: 100, rel: 10, terrain: 1.5, b: {wh:0, fac:0, ref:0} },
+  NL: { name: "Нидерланды", army: 45, gold: 120, rel: 25, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  BE: { name: "Бельгия", army: 40, gold: 110, rel: 25, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  PT: { name: "Португалия", army: 50, gold: 80, rel: 40, terrain: 1.2, b: {wh:0, fac:0, ref:0} },
+  GR: { name: "Греция", army: 60, gold: 70, rel: 0, terrain: 1.3, b: {wh:0, fac:0, ref:0} },
+  CZ: { name: "Чехия", army: 50, gold: 90, rel: 15, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  HU: { name: "Венгрия", army: 45, gold: 80, rel: 5, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  RO: { name: "Румыния", army: 60, gold: 70, rel: 0, terrain: 1.2, b: {wh:0, fac:0, ref:0} },
+  BG: { name: "Болгария", army: 40, gold: 60, rel: 10, terrain: 1.2, b: {wh:0, fac:0, ref:0} },
+  RS: { name: "Сербия", army: 45, gold: 60, rel: -5, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  HR: { name: "Хорватия", army: 35, gold: 70, rel: 20, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  DK: { name: "Дания", army: 40, gold: 100, rel: 20, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  IE: { name: "Ирландия", army: 30, gold: 90, rel: 30, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  SK: { name: "Словакия", army: 30, gold: 60, rel: 10, terrain: 1.2, b: {wh:0, fac:0, ref:0} },
+  LT: { name: "Литва", army: 25, gold: 50, rel: -10, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  LV: { name: "Латвия", army: 20, gold: 45, rel: -10, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  EE: { name: "Эстония", army: 20, gold: 45, rel: -5, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  SI: { name: "Словения", army: 25, gold: 55, rel: 15, terrain: 1.2, b: {wh:0, fac:0, ref:0} },
+  BY: { name: "Беларусь", army: 75, gold: 60, rel: -40, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  MD: { name: "Молдова", army: 15, gold: 30, rel: 0, terrain: 1, b: {wh:0, fac:0, ref:0} },
+  AL: { name: "Албания", army: 20, gold: 30, rel: 10, terrain: 1.3, b: {wh:0, fac:0, ref:0} },
+  MK: { name: "Македония", army: 20, gold: 30, rel: 10, terrain: 1.2, b: {wh:0, fac:0, ref:0} },
+  BA: { name: "Босния", army: 25, gold: 40, rel: 5, terrain: 1.2, b: {wh:0, fac:0, ref:0} },
+  ME: { name: "Черногория", army: 15, gold: 25, rel: 15, terrain: 1.3, b: {wh:0, fac:0, ref:0} },
 };
 
-// Состояние: код -> "mine" | "enemy" | "neutral"
-const ownership = {};
+const myCountryCode = "DE"; 
+let owned = { [myCountryCode]: true };
+db[myCountryCode].army = 0; 
 
-// Инициализация: все нейтральные
-Object.keys(countryData).forEach(code => ownership[code] = "neutral");
-// Твоя стартовая территория (например, Германия)
-ownership.DE = "mine";
-countryData.DE.army = 0; // своя армия не считается
-
-// ============ ЗАГРУЗКА КАРТЫ ============
-async function loadMap() {
+// ============ ИНИЦИАЛИЗАЦИЯ ============
+async function init() {
   try {
     const res = await fetch('europe.svg');
     const svgText = await res.text();
-    document.getElementById('map-container').innerHTML = svgText;
+    const mapContainer = document.getElementById('map-container');
+    mapContainer.innerHTML = svgText;
 
-    const svg = document.querySelector('#map-container svg');
-    // Привязываем клики ко всем path с id
+    const svg = mapContainer.querySelector('svg');
+    
     svg.querySelectorAll('path[id]').forEach(path => {
       const code = path.id.toUpperCase();
-      if (countryData[code]) {
-        path.addEventListener('click', () => selectCountry(code, path));
+      if (db[code]) {
+        path.addEventListener('click', (e) => selectCountry(code, path, e));
+        if (owned[code]) path.classList.add('mine');
       }
     });
 
-    // Обновляем цвета
-    updateColors();
-    log("Карта загружена. Кликай на страны!", "good");
+    updateUI();
+    addLog("Империя основана. Строй здания в своих провинциях!", "good");
   } catch (e) {
-    document.getElementById('map-container').innerHTML = 
-      '<p style="color:#f87171;">Ошибка: не найден europe.svg. Положи файл рядом с index.html.</p>';
+    document.getElementById('map-container').innerHTML = "<h1 style='color:red'>Ошибка загрузки карты europe.svg</h1>";
   }
-}
-
-// ============ ЦВЕТА ============
-function updateColors() {
-  const svg = document.querySelector('#map-container svg');
-  if (!svg) return;
-  svg.querySelectorAll('path[id]').forEach(path => {
-    const code = path.id.toUpperCase();
-    const own = ownership[code];
-    path.classList.remove('mine', 'enemy');
-    if (own === 'mine') path.classList.add('mine');
-    else if (own === 'enemy') path.classList.add('enemy');
-  });
 }
 
 // ============ ВЫБОР СТРАНЫ ============
-function selectCountry(code, path) {
-  selectedCode = code;
-  const data = countryData[code];
-  const own = ownership[code];
-  const info = document.getElementById('info');
+function selectCountry(code, path, event) {
+  selected = { code, path };
+  const data = db[code];
+  const isMine = owned[code];
 
-  if (own === 'mine') {
-    info.innerHTML = `<h3>✅ ${data.name}</h3><p>Уже твоя территория</p>`;
+  document.getElementById('info-title').textContent = data.name;
+  
+  if (isMine) {
+    // Интерфейс для СВОЕЙ страны (Строительство)
+    document.getElementById('country-info').innerHTML = `
+      <p style="color:var(--my-color); font-weight:bold; margin-bottom:10px;">✅ Твоя территория</p>
+      
+      <div class="stat-row">🏭 Складов: <span>${data.b.wh}</span></div>
+      <div class="stat-row">⚙️ Заводов: <span>${data.b.fac}</span></div>
+      <div class="stat-row">🛢️ НПЗ: <span>${data.b.ref}</span></div>
+      <div style="margin-top:10px; font-size:0.85em; opacity:0.8;">
+        Доход с провинции: +${Math.floor(data.gold/2) + data.b.wh*10 + data.b.ref*30}💰, +${Math.floor(data.army/2) + data.b.wh*2 + data.b.fac*10}🧍
+      </div>
+
+      <div class="build-section">
+        <div class="build-title">Строительство</div>
+        <button class="btn-build" onclick="build('${code}', 'wh', 150)" ${player.gold < 150 ? 'disabled' : ''}>🏭 Склад (150💰) +10💰 +2🧍</button>
+        <button class="btn-build" onclick="build('${code}', 'fac', 250)" ${player.gold < 250 ? 'disabled' : ''}>⚙️ Воен. завод (250💰) +10🧍</button>
+        <button class="btn-build" onclick="build('${code}', 'ref', 500)" ${player.gold < 500 ? 'disabled' : ''}>🛢️ НПЗ (500💰) +30💰</button>
+      </div>
+    `;
     return;
   }
 
-  info.innerHTML = `
-    <h3>${data.name}</h3>
-    <p>⚔️ Армия: ${data.army} ${data.mountain ? '🏔️ (горы: +оборона)' : ''}</p>
-    <p>💰 Богатство: ${data.money}</p>
+  // Интерфейс для ЧУЖОЙ страны (Война)
+  const relPercent = ((data.rel + 100) / 2);
+  document.getElementById('country-info').innerHTML = `
+    <div class="stat-row">⚔️ Армия: <span>${data.army}</span></div>
+    <div class="stat-row">💰 Богатство: <span>${data.gold}</span></div>
+    <div class="stat-row">🏔️ Оборона (рельеф): <span>x${data.terrain}</span></div>
+    
+    <div style="margin-top:15px; font-size:0.9em;">Отношения: ${data.rel} / 100</div>
+    <div style="width:100%; height:8px; background:#000; border-radius:4px; margin-bottom:15px;">
+      <div style="height:100%; border-radius:4px; background:linear-gradient(90deg, red, yellow, green); width: ${relPercent}%;"></div>
+    </div>
+
     <button class="btn-attack" onclick="attack('${code}')" ${player.army < 20 ? 'disabled' : ''}>⚔️ Атаковать</button>
-    <button class="btn-diplo" onclick="diplomacy('${code}')" ${player.money < 80 ? 'disabled' : ''}>🤝 Подкуп (80💰)</button>
+    <button class="btn-diplo" onclick="diplomacy('${code}')" ${player.gold < 80 ? 'disabled' : ''}>🤝 Подкуп (80💰)</button>
+    <button class="btn-spy" onclick="spy('${code}')" ${player.gold < 50 ? 'disabled' : ''}>🕵️ Разведка (50💰)</button>
   `;
 }
 
-// ============ АТАКА ============
-function attack(code) {
-  const data = countryData[code];
-  const defBonus = data.mountain ? 1.3 : 1;
-  const power = player.army * (0.8 + Math.random() * 0.6);
-  const defense = data.army * defBonus * (0.8 + Math.random() * 0.6);
-
-  log(`⚔️ Атака на ${data.name}: ${Math.floor(power)} vs ${Math.floor(defense)}`, "info");
-
-  if (power > defense) {
-    const losses = Math.floor(data.army * 0.2 + Math.random() * 15);
-    player.army = Math.max(10, player.army - losses);
-    player.money += Math.floor(data.money / 2);
-    ownership[code] = 'mine';
-    data.army = 0;
-    log(`🎉 ${data.name} захвачена! Потери: ${losses}⚔️, трофеи: ${Math.floor(data.money/2)}💰`, "good");
-  } else {
-    const losses = Math.floor(player.army * 0.3);
-    player.army = Math.max(10, player.army - losses);
-    log(`💀 Провал! Потери: ${losses}⚔️`, "bad");
-  }
-  refreshUI();
-  updateColors();
+// ============ СТРОИТЕЛЬСТВО ============
+function build(code, type, cost) {
+  if (player.gold < cost) return;
+  player.gold -= cost;
+  db[code].b[type]++;
+  addLog(`🏗️ В ${db[code].name} построено: ${type === 'wh' ? 'Склад' : type === 'fac' ? 'Завод' : 'НПЗ'}`, "info");
+  updateUI();
+  selectCountry(code, selected.path, null);
 }
 
-// ============ ДИПЛОМАТИЯ ============
-function diplomacy(code) {
-  const data = countryData[code];
-  player.money -= 80;
-  const success = Math.random() < 0.4; // 40% шанс
-  if (success) {
-    ownership[code] = 'mine';
+// ============ БОЙ ============
+function attack(code) {
+  const data = db[code];
+  const myPower = player.army * (1 + player.tech * 0.15) * (0.8 + Math.random() * 0.4);
+  const enemyPower = data.army * data.terrain * (0.8 + Math.random() * 0.4);
+
+  addLog(`⚔️ Битва: Наши ${Math.floor(myPower)} vs Их ${Math.floor(enemyPower)}`, "info");
+
+  if (myPower > enemyPower) {
+    const losses = Math.floor(data.army * 0.3);
+    player.army = Math.max(5, player.army - losses);
+    owned[code] = true;
+    
+    selected.path.classList.add('captured-anim');
+    setTimeout(() => {
+      selected.path.classList.remove('enemy');
+      selected.path.classList.add('mine');
+      selected.path.classList.remove('captured-anim');
+    }, 1000);
+    
+    showFloatingText(selected.path, `+${data.gold/2}💰`, 'var(--gold)');
+    addLog(`🎉 ${data.name} захвачена! Потери: ${losses}.`, "good");
     data.army = 0;
-    log(`🤝 ${data.name} присоединилась!`, "good");
+    data.rel = 100;
   } else {
-    log(`🤝 ${data.name} отказалась от подкупа`, "bad");
+    const losses = Math.floor(player.army * 0.4);
+    player.army = Math.max(5, player.army - losses);
+    data.rel -= 20;
+    data.army -= Math.floor(player.army * 0.1);
+    
+    selected.path.classList.add('captured-anim');
+    setTimeout(() => selected.path.classList.remove('captured-anim'), 1000);
+    showFloatingText(selected.path, `-${losses}🧍`, 'var(--army)');
+    addLog(`💀 Провал! Потери: ${losses}.`, "bad");
   }
-  refreshUI();
-  updateColors();
+  
+  updateUI();
+  selectCountry(code, selected.path, null);
+}
+
+function diplomacy(code) {
+  const data = db[code];
+  player.gold -= 80;
+  
+  if (Math.random() < 0.5 + (data.rel / 200)) {
+    data.rel += 20;
+    addLog(`🤝 ${data.name} приняла дар (+20 отношений).`, "good");
+    if (data.rel >= 90) {
+      owned[code] = true;
+      selected.path.classList.add('mine');
+      data.army = 0;
+      addLog(`✨ ${data.name} присоединилась к империи!`, "good");
+      showFloatingText(selected.path, `Аннексия!`, 'var(--my-color)');
+    }
+  } else {
+    data.rel -= 10;
+    addLog(`🤝 ${data.name} отвергла подкуп (-10 отношений).`, "bad");
+  }
+  
+  updateUI();
+  if (selected) selectCountry(code, selected.path, null);
+}
+
+function spy(code) {
+  const data = db[code];
+  player.gold -= 50;
+  
+  if (Math.random() > 0.3) {
+    const stolen = Math.floor(data.gold * 0.3);
+    player.gold += stolen;
+    player.tech += 1;
+    addLog(`🕵️ Успех! Украдено ${stolen}💰 и +1 Наука.`, "good");
+    showFloatingText(selected.path, `+1🔬`, 'var(--science)');
+  } else {
+    data.rel -= 30;
+    addLog(`🕵️ Провал! Отношения упали (-30).`, "bad");
+  }
+  
+  updateUI();
+  if (selected) selectCountry(code, selected.path, null);
 }
 
 // ============ КОНЕЦ ХОДА ============
-document.getElementById('endTurn').addEventListener('click', () => {
+function endTurn() {
   turn++;
-  let income = 20, recruits = 5;
-  Object.keys(ownership).forEach(code => {
-    if (ownership[code] === 'mine' && countryData[code]) {
-      income += Math.floor(countryData[code].money / 10);
-      recruits += Math.floor(countryData[code].army / 10) || 2;
+  
+  // 1. Экономика игрока
+  let income = 20; // Базовый доход
+  let recruits = 10; // Базовый призыв
+  
+  Object.keys(owned).forEach(code => {
+    if (db[code]) {
+      income += Math.floor(db[code].gold / 2);
+      recruits += Math.floor(db[code].army / 2);
+      
+      // Бонусы от зданий
+      income += db[code].b.wh * 10;
+      recruits += db[code].b.wh * 2;
+      
+      recruits += db[code].b.fac * 10;
+      
+      income += db[code].b.ref * 30;
     }
   });
-  player.money += income;
+
+  player.gold += income;
   player.army += recruits;
-  log(`📅 Ход ${turn}: +${income}💰, +${recruits}⚔️`, "info");
-  refreshUI();
-});
+  addLog(`📅 Ход ${turn}: Доход +${income}💰, Призыв +${recruits}🧍`, "info");
 
-// ============ UI ============
-function refreshUI() {
-  document.getElementById('money').textContent = player.money;
-  document.getElementById('army').textContent = player.army;
-  const count = Object.values(ownership).filter(o => o === 'mine').length;
-  document.getElementById('count').textContent = count;
+  // 2. ИИ
+  let enemiesAttacked = false;
+  Object.keys(db).forEach(code => {
+    if (owned[code]) return;
+    const c = db[code];
+    c.army += Math.floor(Math.random() * 5) + 2;
+    
+    const enemyPower = c.army * c.terrain;
+    if (c.rel < -30 && enemyPower > player.army * 0.8) {
+      const damage = Math.floor(player.army * 0.2 + Math.random() * 10);
+      player.army = Math.max(10, player.army - damage);
+      player.gold = Math.max(0, player.gold - 30);
+      addLog(`⚠️ ${c.name} напала! Потери: -${damage}🧍, -30💰`, "bad");
+      enemiesAttacked = true;
+      
+      if (player.army < 20 && Math.random() < 0.3) {
+        const myProvinces = Object.keys(owned);
+        if (myProvinces.length > 1) {
+          const lostProv = myProvinces[Math.floor(Math.random() * myProvinces.length)];
+          delete owned[lostProv];
+          document.querySelector(`path[id="${lostProv.toLowerCase()}"]`).classList.remove('mine');
+          addLog(`💀 Мы потеряли ${db[lostProv].name}!`, "bad");
+        }
+      }
+    }
+    if (c.rel < 0) c.rel += 2;
+    if (c.rel > 0) c.rel -= 1;
+  });
 
-  if (selectedCode) {
-    const p = document.querySelector(`#map-container path[id="${selectedCode.toLowerCase()}"]`);
-    if (p) selectCountry(selectedCode, p);
+  if (!enemiesAttacked) addLog(`🕊️ В Европе тихо.`, "info");
+
+  updateUI();
+  if (selected) {
+    const p = document.querySelector(`path[id="${selected.code.toLowerCase()}"]`);
+    selectCountry(selected.code, p, null);
   }
 }
 
-function log(msg, type = "info") {
-  const el = document.getElementById('log');
-  const div = document.createElement('div');
-  div.className = type;
-  div.textContent = `[${turn}] ${msg}`;
-  el.prepend(div);
-  if (el.children.length > 40) el.lastChild.remove();
+function updateUI() {
+  document.getElementById('ui-gold').textContent = Math.floor(player.gold);
+  document.getElementById('ui-army').textContent = Math.floor(player.army);
+  document.getElementById('ui-tech').textContent = player.tech;
+  document.getElementById('ui-count').textContent = Object.keys(owned).length;
 }
 
-// Старт
-loadMap();
-refreshUI();
+function addLog(msg, type) {
+  const logBox = document.getElementById('log');
+  const el = document.createElement('div');
+  el.className = `log-${type}`;
+  el.textContent = `[${turn}] ${msg}`;
+  logBox.prepend(el);
+  if (logBox.children.length > 30) logBox.lastChild.remove();
+}
+
+function showFloatingText(path, text, color) {
+  const rect = path.getBoundingClientRect();
+  const containerRect = document.getElementById('map-container').getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'floating-text';
+  el.textContent = text;
+  el.style.color = color;
+  el.style.left = (rect.left - containerRect.left + rect.width/2) + 'px';
+  el.style.top = (rect.top - containerRect.top) + 'px';
+  document.getElementById('map-container').appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
+
+init();
 </script>
 </body>
 </html>
